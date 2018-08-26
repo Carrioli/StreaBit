@@ -1,0 +1,103 @@
+<html>
+<head>
+    <script src="https://rawgit.com/emn178/js-md5/master/build/md5.min.js"></script>
+    <script src="js/AbstractEngine.js"></script>
+    <script src="js/StreaBit.DOSBox.js"></script>
+    <script src="js/StreaBit.Spectrum.js"></script>
+    <script src="https://rawgit.com/Stuk/jszip/master/dist/jszip.min.js"></script>
+    <script src="cores/Spectrum/jdataview.js"></script>
+    <script src="cores/Spectrum/jsspeccy-core.min.js"></script>
+
+    <script>
+        var callback = (id, dict) => {
+            status = null;
+            error = null;
+            progress = null;
+            switch (id) {
+                //emulatore avviato
+                case 1:
+                    status = "Engine started";
+                    break;
+                //engine scaricato
+                case 2:
+                    status = "Engine downloaded";
+                    break;
+                //game scaricato
+                case 3:
+                    status = "Rom downloaded";
+                    break;
+                //save scaricato
+                case 4:
+                    break;
+                //error
+                case 5:
+                    error = dict.msg_errore;
+                    break;
+                //save caricato sul server
+                case 6:
+                    break;
+                //progress
+                case 7:
+                    status = "Downloading ";
+                    if ("engine" in dict) {
+                        status += "engine";
+                        progress = dict.engine;
+                    }
+                    if ("zip_gioco" in dict) {
+                        status += "rom";
+                        progress = dict.zip_gioco;
+                    }
+                    break;
+            }
+            var s_el = document.getElementById("status");
+            if (s_el != null & status != null)
+                if (progress != null) s_el.innerHTML = status + " <b>" + progress + "%</b>";
+                else s_el.innerText = status;
+            if (error != null) console.log("ERROR: " + error);
+        };
+
+        // var game = new StreaBit.DOSBox({
+        // 		canvas_id: "screen",
+        // 		onStatusChange: callback,
+        // 		rom_path: "roms/dosbox/Over the Net.zip",
+        // 		cores_path:"cores/"
+        // 	});
+
+        var game = new StreaBit.Spectrum({
+            canvas_id: "screen",
+            onStatusChange: callback,
+            rom_path: "roms/Spectrum",
+            cores_path: "cores/"
+        });
+
+        console.log(game instanceof StreaBit.Spectrum);
+
+        var paused = true;
+        function play_pause() {
+            if (paused) {
+                var jsspeccy = JSSpeccy('speccy', {
+                    'autostart': false,
+                    'autoload': true,
+                    'scaleFactor': 2,
+                    'loadFile': 'http://jsspeccy.zxdemo.org/games/manic_miner.z80'
+                });
+                paused = false;
+            } else {
+                game.pause();
+                paused = true;
+            }
+            var btn = document.getElementById('play_btn');
+            btn.innerText = paused ? "PLAY" : "PAUSE"
+        }
+    </script>
+</head>
+<body>
+    <center>
+        <button id="play_btn" onclick="play_pause();">PLAY</button>
+        <button id="fullscreen_btn" onclick="game.fullScreen();">Full screen</button>
+        <h2 id="status"></h2>
+        <!--<canvas id='screen'></canvas>-->
+        <div id="speccy"></div>
+    </center>
+</body>
+</html>
